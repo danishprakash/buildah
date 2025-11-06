@@ -300,7 +300,7 @@ func IsLexicallyInRoot(root, path string) bool {
 // handling if unsafePath has already been scoped within the rootfs (this is
 // needed for a lot of runc callers and fixing this would require reworking a
 // lot of path logic).
-func MkdirAllInRootOpen(root, unsafePath string, mode uint32) (_ *os.File, Err error) {
+func MkdirAllInRootOpen(root, unsafePath string, mode os.FileMode) (_ *os.File, Err error) {
 	// If the path is already "within" the root, get the path relative to the
 	// root and use that as the unsafe path. This is necessary because a lot of
 	// MkdirAllInRootOpen callers have already done SecureJoin, and refactoring
@@ -334,12 +334,13 @@ func MkdirAllInRootOpen(root, unsafePath string, mode uint32) (_ *os.File, Err e
 	}
 	defer rootDir.Close()
 
-	return securejoin.MkdirAllHandle(rootDir, unsafePath, int(mode))
+	return securejoin.MkdirAllHandle(rootDir, unsafePath, mode)
+
 }
 
 // MkdirAllInRoot is a wrapper around MkdirAllInRootOpen which closes the
 // returned handle, for callers that don't need to use it.
-func MkdirAllInRoot(root, unsafePath string, mode uint32) error {
+func MkdirAllInRoot(root, unsafePath string, mode os.FileMode) error {
 	f, err := MkdirAllInRootOpen(root, unsafePath, mode)
 	if err == nil {
 		_ = f.Close()
